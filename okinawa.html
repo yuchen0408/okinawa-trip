@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Okinawa Trip - 日系極簡旅遊助手</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans JP', sans-serif; background-color: #F8FAFA; -webkit-tap-highlight-color: transparent; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .active-day { background-color: #5FA8A3 !important; color: white !important; transform: scale(1.05); }
+    </style>
+</head>
+<body class="text-slate-700">
+    <div id="app" class="max-w-md mx-auto min-h-screen pb-24 relative shadow-2xl bg-white">
+        
+        <header class="p-6 pt-10">
+            <h1 class="text-2xl font-bold text-slate-800">沖縄旅行 <span class="text-sm font-normal text-teal-600 ml-2">5 Days Trip</span></h1>
+            <div class="flex items-center mt-2 text-slate-400 text-sm">
+                <i data-lucide="map-pin" class="w-4 h-4 mr-1"></i> Okinawa, Japan
+            </div>
+        </header>
+
+        <div class="flex overflow-x-auto px-6 space-x-4 hide-scrollbar py-2">
+            <button v-for="n in 5" :key="n" 
+                @click="currentDay = n"
+                :class="['flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 bg-slate-50', currentDay === n ? 'active-day shadow-lg shadow-teal-100' : 'text-slate-400']">
+                <span class="text-xs uppercase">Day</span>
+                <span class="text-xl font-bold">{{ n }}</span>
+            </button>
+        </div>
+
+        <main class="mt-6 px-6">
+            
+            <div v-if="activeTab === 'itinerary'">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold flex items-center">
+                        行程安排
+                        <span v-if="weather" class="ml-3 text-xs font-medium bg-teal-50 text-teal-600 px-2 py-1 rounded-full border border-teal-100">
+                             {{ weather.temp }}°C · {{ weather.desc }}
+                        </span>
+                    </h2>
+                    <button @click="addItem" class="bg-teal-500 text-white p-2 rounded-full shadow-md"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                </div>
+
+                <div class="space-y-4">
+                    <div v-for="(item, index) in itinerary[currentDay]" :key="index" class="p-4 rounded-3xl bg-slate-50 border border-slate-100 group relative">
+                        <div class="flex justify-between">
+                            <span class="text-xs font-bold text-teal-500 bg-white px-3 py-1 rounded-full shadow-sm">{{ item.time }}</span>
+                            <div class="flex space-x-2">
+                                <button @click="openNav(item.location)" class="text-slate-400 hover:text-teal-500"><i data-lucide="navigation" class="w-4 h-4"></i></button>
+                                <button @click="deleteItem(index)" class="text-slate-300 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                        <h3 class="mt-2 font-medium text-slate-800">{{ item.location }}</h3>
+                        <p class="text-xs text-slate-400 mt-1">{{ item.note }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="activeTab === 'split'">
+                <h2 class="text-lg font-bold mb-4">分帳計算機</h2>
+                <div class="bg-teal-500 p-6 rounded-3xl text-white shadow-xl mb-6">
+                    <p class="text-teal-100 text-xs mb-1">總支出金額 (JPY)</p>
+                    <h3 class="text-3xl font-bold">¥ {{ totalExpenses.toLocaleString() }}</h3>
+                    <div class="mt-4 flex justify-between text-sm pt-4 border-t border-teal-400/30">
+                        <span>參與人數: {{ peopleCount }} 人</span>
+                        <span>平均: ¥ {{ Math.round(totalExpenses / (peopleCount || 1)).toLocaleString() }} / 人</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div v-for="(bill, idx) in expenses" :key="idx" class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                        <div>
+                            <p class="font-medium text-sm">{{ bill.title }}</p>
+                            <p class="text-xs text-slate-400">¥ {{ bill.amount }}</p>
+                        </div>
+                        <button @click="expenses.splice(idx, 1)" class="text-slate-300"><i data-lucide="x-circle" class="w-5 h-5"></i></button>
+                    </div>
+                    <div class="pt-4 border-t border-dashed border-slate-200">
+                        <input v-model="newExpenseTitle" type="text" placeholder="品項" class="w-full mb-2 p-3 rounded-xl bg-slate-100 text-sm focus:outline-none focus:ring-2 ring-teal-500">
+                        <input v-model.number="newExpenseAmount" type="number" placeholder="金額 (¥)" class="w-full mb-3 p-3 rounded-xl bg-slate-100 text-sm focus:outline-none focus:ring-2 ring-teal-500">
+                        <button @click="addExpense" class="w-full bg-slate-800 text-white py-3 rounded-xl font-medium">新增支出</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[360px] h-16 glass-card rounded-full flex items-center justify-around px-6 shadow-xl">
+            <button @click="activeTab = 'itinerary'" :class="activeTab === 'itinerary' ? 'text-teal-600' : 'text-slate-300'">
+                <i data-lucide="calendar"></i>
+            </button>
+            <button @click="activeTab = 'split'" :class="activeTab === 'split' ? 'text-teal-600' : 'text-slate-300'">
+                <i data-lucide="banknote"></i>
+            </button>
+            <button class="text-slate-300"><i data-lucide="settings"></i></button>
+        </nav>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, computed, watch } = Vue;
+
+        createApp({
+            setup() {
+                const currentDay = ref(1);
+                const activeTab = ref('itinerary');
+                const weather = ref(null);
+                const peopleCount = ref(2); // 預設兩人
+                
+                // 行程資料 (預設)
+                const itinerary = ref({
+                    1: [{ time: "10:30", location: "那霸機場", note: "租車公司接駁" }, { time: "12:30", location: "瀨長島 Umikaji Terrace", note: "吃幸福鬆餅" }],
+                    2: [{ time: "09:00", location: "美麗海水族館", note: "去看黑潮之海" }],
+                    3: [{ time: "14:00", location: "萬座毛", note: "看大象岩" }],
+                    4: [{ time: "10:00", location: "國際通", note: "買伴手禮" }],
+                    5: [{ time: "15:00", location: "波上宮", note: "最後祈福" }]
+                });
+
+                // 分帳資料
+                const expenses = ref([
+                    { title: "租車 5 天", amount: 45000 },
+                    { title: "阿古豬火鍋", amount: 12000 }
+                ]);
+                const newExpenseTitle = ref('');
+                const newExpenseAmount = ref(null);
+
+                // 計算總支出
+                const totalExpenses = computed(() => {
+                    return expenses.value.reduce((sum, item) => sum + (item.amount || 0), 0);
+                });
+
+                // 自動更新天氣資訊 (Open-Meteo)
+                const fetchWeather = async () => {
+                    try {
+                        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=26.2124&longitude=127.6809&current_weather=true');
+                        const data = await res.json();
+                        weather.value = {
+                            temp: Math.round(data.current_weather.temperature),
+                            desc: '沖縄晴れ'
+                        };
+                    } catch (e) {
+                        weather.value = { temp: 24, desc: '晴時多雲' };
+                    }
+                };
+
+                const addItem = () => {
+                    const loc = prompt("地點名稱？");
+                    const time = prompt("時間？ (例如 12:00)");
+                    if(loc && time) {
+                        itinerary.value[currentDay.value].push({ time, location: loc, note: "自訂行程" });
+                    }
+                };
+
+                const deleteItem = (idx) => {
+                    itinerary.value[currentDay.value].splice(idx, 1);
+                };
+
+                const openNav = (location) => {
+                    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`, '_blank');
+                };
+
+                const addExpense = () => {
+                    if(newExpenseTitle.value && newExpenseAmount.value) {
+                        expenses.value.push({ title: newExpenseTitle.value, amount: newExpenseAmount.value });
+                        newExpenseTitle.value = '';
+                        newExpenseAmount.value = null;
+                    }
+                };
+
+                onMounted(() => {
+                    fetchWeather();
+                    lucide.createIcons();
+                });
+
+                watch([activeTab, currentDay], () => {
+                    setTimeout(() => lucide.createIcons(), 0);
+                });
+
+                return { 
+                    currentDay, activeTab, itinerary, weather, 
+                    expenses, newExpenseTitle, newExpenseAmount, totalExpenses, peopleCount,
+                    addItem, deleteItem, openNav, addExpense
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
