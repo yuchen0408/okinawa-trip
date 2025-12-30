@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Okinawa Trip - 日系極簡旅遊助手</title>
+    <title>Okinawa Trip - 沖繩行程助手</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -20,7 +20,7 @@
     <div id="app" class="max-w-md mx-auto min-h-screen pb-24 relative shadow-2xl bg-white">
         
         <header class="p-6 pt-10">
-            <h1 class="text-2xl font-bold text-slate-800">沖縄旅行 <span class="text-sm font-normal text-teal-600 ml-2">5 Days Trip</span></h1>
+            <h1 class="text-2xl font-bold text-slate-800">沖縄旅行 <span class="text-sm font-normal text-teal-600 ml-2">1/4 - 1/8</span></h1>
             <div class="flex items-center mt-2 text-slate-400 text-sm">
                 <i data-lucide="map-pin" class="w-4 h-4 mr-1"></i> Okinawa, Japan
             </div>
@@ -58,7 +58,7 @@
                             </div>
                         </div>
                         <h3 class="mt-2 font-medium text-slate-800">{{ item.location }}</h3>
-                        <p class="text-xs text-slate-400 mt-1">{{ item.note }}</p>
+                        <p class="text-xs text-slate-400 mt-1 whitespace-pre-line">{{ item.note }}</p>
                     </div>
                 </div>
             </div>
@@ -69,7 +69,10 @@
                     <p class="text-teal-100 text-xs mb-1">總支出金額 (JPY)</p>
                     <h3 class="text-3xl font-bold">¥ {{ totalExpenses.toLocaleString() }}</h3>
                     <div class="mt-4 flex justify-between text-sm pt-4 border-t border-teal-400/30">
-                        <span>參與人數: {{ peopleCount }} 人</span>
+                        <div class="flex items-center">
+                            <span>人數: </span>
+                            <input v-model.number="peopleCount" type="number" class="bg-transparent border-b border-white w-8 text-center focus:outline-none ml-1">
+                        </div>
                         <span>平均: ¥ {{ Math.round(totalExpenses / (peopleCount || 1)).toLocaleString() }} / 人</span>
                     </div>
                 </div>
@@ -85,11 +88,10 @@
                     <div class="pt-4 border-t border-dashed border-slate-200">
                         <input v-model="newExpenseTitle" type="text" placeholder="品項" class="w-full mb-2 p-3 rounded-xl bg-slate-100 text-sm focus:outline-none focus:ring-2 ring-teal-500">
                         <input v-model.number="newExpenseAmount" type="number" placeholder="金額 (¥)" class="w-full mb-3 p-3 rounded-xl bg-slate-100 text-sm focus:outline-none focus:ring-2 ring-teal-500">
-                        <button @click="addExpense" class="w-full bg-slate-800 text-white py-3 rounded-xl font-medium">新增支出</button>
+                        <button @click="addExpense" class="w-full bg-slate-800 text-white py-3 rounded-xl font-medium">新增支出項目</button>
                     </div>
                 </div>
             </div>
-
         </main>
 
         <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[360px] h-16 glass-card rounded-full flex items-center justify-around px-6 shadow-xl">
@@ -99,7 +101,6 @@
             <button @click="activeTab = 'split'" :class="activeTab === 'split' ? 'text-teal-600' : 'text-slate-300'">
                 <i data-lucide="banknote"></i>
             </button>
-            <button class="text-slate-300"><i data-lucide="settings"></i></button>
         </nav>
     </div>
 
@@ -111,38 +112,73 @@
                 const currentDay = ref(1);
                 const activeTab = ref('itinerary');
                 const weather = ref(null);
-                const peopleCount = ref(2); // 預設兩人
-                
-                // 行程資料 (預設)
-                const itinerary = ref({
-                    1: [{ time: "10:30", location: "那霸機場", note: "租車公司接駁" }, { time: "12:30", location: "瀨長島 Umikaji Terrace", note: "吃幸福鬆餅" }],
-                    2: [{ time: "09:00", location: "美麗海水族館", note: "去看黑潮之海" }],
-                    3: [{ time: "14:00", location: "萬座毛", note: "看大象岩" }],
-                    4: [{ time: "10:00", location: "國際通", note: "買伴手禮" }],
-                    5: [{ time: "15:00", location: "波上宮", note: "最後祈福" }]
-                });
+                const peopleCount = ref(2);
 
-                // 分帳資料
-                const expenses = ref([
-                    { title: "租車 5 天", amount: 45000 },
-                    { title: "阿古豬火鍋", amount: 12000 }
+                // 行程資料 (讀取緩存或預設值)
+                const defaultItinerary = {
+                    1: [
+                        { time: "09:45", location: "桃園機場", note: "12:25 抵達沖繩" },
+                        { time: "14:00", location: "OTS取車", note: "租車手續" },
+                        { time: "15:00", location: "系滿魚市場", note: "吃午餐\nMapCode: 232 484 077*14" },
+                        { time: "17:30", location: "LCH飯店 (北部)", note: "入住＋海灘散步\nMapCode: 206 411 325*73" }
+                    ],
+                    2: [
+                        { time: "09:00", location: "許田休息站", note: "MapCode: 206 476 705*46" },
+                        { time: "10:10", location: "古宇利南端展望台", note: "MapCode: 485 601 892*07" },
+                        { time: "11:10", location: "美麗海水族館", note: "含午餐+表演\nMapCode: 553 075 592*40" },
+                        { time: "18:00", location: "燒肉本部牧場", note: "晚餐時間\nMapCode: 206 655 716*78" },
+                        { time: "19:20", location: "名護逛街", note: "UNIQLO / 唐吉訶德" }
+                    ],
+                    3: [
+                        { time: "09:10", location: "名護自然動植物園", note: "MapCode: 206 689 696*34" },
+                        { time: "12:10", location: "萬座毛", note: "MapCode: 206 282 881*56" },
+                        { time: "13:50", location: "美國村", note: "逛街、夕陽、晚餐\nMapCode: 33 525 442*36" },
+                        { time: "18:40", location: "那霸拉根特飯店", note: "入住，可晃國際通\nMapCode: 33 157 750*54" }
+                    ],
+                    4: [
+                        { time: "09:00", location: "泊港魚市場", note: "MapCode: 33 216 119*82" },
+                        { time: "10:30", location: "國際通/牧志市場", note: "肉屋" },
+                        { time: "12:30", location: "暖暮拉麵 系滿店", note: "MapCode: 232 515 598*75" },
+                        { time: "14:00", location: "西松屋 豐崎店", note: "MapCode: 232 543 400*35" },
+                        { time: "15:20", location: "豐崎海濱公園", note: "MapCode: 232 543 123*28" },
+                        { time: "16:40", location: "瀨長島", note: "夕陽＋晚餐\nMapCode: 33 002 486*08" }
+                    ],
+                    5: [
+                        { time: "09:00", location: "達磨寺", note: "MapCode: 33 161 568*51" },
+                        { time: "11:30", location: "自由時間", note: "咖啡廳或最後補買" },
+                        { time: "13:30", location: "還車", note: "搭接駁車去機場" },
+                        { time: "16:55", location: "那霸機場", note: "起飛 ✈️" }
+                    ]
+                };
+
+                const itinerary = ref(JSON.parse(localStorage.getItem('okinawa_itinerary')) || defaultItinerary);
+                const expenses = ref(JSON.parse(localStorage.getItem('okinawa_expenses')) || [
+                    { title: "租車預估", amount: 45000 }
                 ]);
+
+                // 自動儲存到 LocalStorage
+                watch(itinerary, (newVal) => {
+                    localStorage.setItem('okinawa_itinerary', JSON.stringify(newVal));
+                }, { deep: true });
+
+                watch(expenses, (newVal) => {
+                    localStorage.setItem('okinawa_expenses', JSON.stringify(newVal));
+                }, { deep: true });
+
                 const newExpenseTitle = ref('');
                 const newExpenseAmount = ref(null);
 
-                // 計算總支出
                 const totalExpenses = computed(() => {
                     return expenses.value.reduce((sum, item) => sum + (item.amount || 0), 0);
                 });
 
-                // 自動更新天氣資訊 (Open-Meteo)
                 const fetchWeather = async () => {
                     try {
                         const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=26.2124&longitude=127.6809&current_weather=true');
                         const data = await res.json();
                         weather.value = {
                             temp: Math.round(data.current_weather.temperature),
-                            desc: '沖縄晴れ'
+                            desc: '沖繩 晴れ'
                         };
                     } catch (e) {
                         weather.value = { temp: 24, desc: '晴時多雲' };
@@ -158,7 +194,9 @@
                 };
 
                 const deleteItem = (idx) => {
-                    itinerary.value[currentDay.value].splice(idx, 1);
+                    if(confirm("確定刪除此行程？")) {
+                        itinerary.value[currentDay.value].splice(idx, 1);
+                    }
                 };
 
                 const openNav = (location) => {
