@@ -12,135 +12,127 @@
         body { 
             font-family: 'Noto Sans JP', sans-serif; 
             background-image: url('https://images.unsplash.com/photo-1544253049-3543666f286b?q=80&w=2000&auto=format&fit=crop'); 
-            background-size: cover; 
-            background-position: center; 
-            background-attachment: fixed;
+            background-size: cover; background-position: center; background-attachment: fixed;
         }
-        .main-overlay { 
-            background: rgba(255, 255, 255, 0.05); 
-            backdrop-filter: blur(8px); 
-            min-height: 100vh; 
-        }
+        .main-overlay { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(8px); min-height: 100vh; }
         .glass-card { 
-            background: rgba(255, 255, 255, 0.7); 
+            background: rgba(255, 255, 255, 0.75); 
             backdrop-filter: blur(12px); 
             border: 1px solid rgba(255, 255, 255, 0.3); 
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         }
-        .sticky-header { 
-            position: sticky; 
-            top: 0; 
-            z-index: 40; 
-            background: rgba(255, 255, 255, 0.5); 
-            backdrop-filter: blur(20px); 
-        }
-        .timeline-line { position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; border-left: 2px dashed #0d9488; z-index: 0; opacity: 0.5; }
+        .sticky-header { position: sticky; top: 0; z-index: 40; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px); }
+        .timeline-line { position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; border-left: 2px dashed #0d9488; z-index: 0; opacity: 0.3; }
         .timeline-dot { position: absolute; left: 14px; width: 14px; height: 14px; background: #0d9488; border: 3px solid white; border-radius: 50%; z-index: 10; }
-        input, textarea { background: transparent; border: none; outline: none; width: 100%; }
+        input, textarea { background: transparent; border: none; outline: none; width: 100%; color: #1e293b; }
+        input::placeholder, textarea::placeholder { color: #94a3b8; }
         .active-tab { background-color: #0d9488 !important; color: white !important; }
-        .map-btn { background: #4285F4; color: white; border-radius: 12px; padding: 6px 10px; font-size: 10px; display: flex; align-items: center; gap: 4px; }
+        .map-btn { background: #4285F4; color: white; border-radius: 12px; padding: 6px 12px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 4px; }
+        /* 隱藏捲軸但保持滾動 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="text-slate-800">
     <div id="app" class="main-overlay pb-32">
         <header class="sticky-header shadow-sm">
-            <div class="p-6 pb-2 flex justify-between items-start">
+            <div class="p-5 pb-2 flex justify-between items-center">
                 <div>
-                    <h1 class="text-2xl font-black text-teal-900 drop-shadow-md">沖繩 2026 🌴</h1>
-                    <p class="text-slate-800 font-bold text-xs bg-white/60 inline-block px-3 py-1 rounded-full mt-1">OKINAWA VACATION</p>
+                    <h1 class="text-2xl font-black text-teal-900">沖繩 2026 🌴</h1>
+                    <span class="text-[10px] bg-white/80 px-2 py-0.5 rounded-full font-bold text-teal-700">1/4 - 1/8 VACATION</span>
                 </div>
-                <div class="glass-card rounded-3xl p-3 flex flex-col items-center min-w-[90px] border-white/50">
-                    <i :data-lucide="weatherIcon" class="w-6 h-6 text-orange-400 mb-1"></i>
-                    <div class="text-lg font-black text-teal-900">{{ weather.temp }}°C</div>
-                    <div class="text-[10px] text-blue-600 font-bold">降雨 {{ weather.pop }}%</div>
+                <div class="glass-card rounded-2xl p-2 flex flex-col items-center min-w-[80px]">
+                    <i :data-lucide="weatherIcon" class="w-5 h-5 text-orange-400"></i>
+                    <div class="text-base font-black text-teal-900">{{ weather.temp }}°C</div>
+                    <div class="text-[9px] text-blue-600 font-bold">降雨 {{ weather.pop }}%</div>
                 </div>
             </div>
 
-            <div class="flex overflow-x-auto px-6 space-x-3 no-scrollbar pb-4 pt-4">
+            <div class="flex overflow-x-auto px-5 space-x-2 no-scrollbar pb-3">
                 <button v-for="(info, index) in dateInfo" :key="index" @click="currentDay = index + 1"
-                    :class="['flex-shrink-0 px-4 py-3 rounded-2xl flex flex-col items-center min-w-[85px] transition-all border', 
-                    currentDay === index + 1 ? 'active-tab scale-105 shadow-lg' : 'bg-white/50 text-slate-500 border-white/30']">
-                    <span class="text-[10px] font-bold">{{ info.date }}</span>
+                    :class="['flex-shrink-0 px-4 py-2 rounded-xl flex flex-col items-center min-w-[75px] transition-all border', 
+                    currentDay === index + 1 ? 'active-tab shadow-md scale-105' : 'bg-white/40 text-slate-500 border-white/20']">
+                    <span class="text-[9px] font-bold">{{ info.date }}</span>
                     <span class="text-sm font-black">Day {{ index + 1 }}</span>
                 </button>
             </div>
         </header>
 
-        <main class="px-5 mt-4">
-            <div class="flex bg-white/30 backdrop-blur-md rounded-2xl p-1 mb-6 border border-white/40">
-                <button @click="activeTab = 'itinerary'" :class="['flex-1 py-2.5 rounded-xl text-sm font-black transition-all', activeTab === 'itinerary' ? 'active-tab shadow-md' : 'text-slate-700']">行程</button>
-                <button @click="activeTab = 'split'" :class="['flex-1 py-2.5 rounded-xl text-sm font-black transition-all', activeTab === 'split' ? 'active-tab shadow-md' : 'text-slate-700']">記帳</button>
-                <button @click="activeTab = 'phrases'" :class="['flex-1 py-2.5 rounded-xl text-sm font-black transition-all', activeTab === 'phrases' ? 'active-tab shadow-md' : 'text-slate-700']">常用日語</button>
+        <main class="px-4 mt-4">
+            <div class="flex bg-white/30 backdrop-blur-md rounded-2xl p-1 mb-6 border border-white/40 shadow-inner">
+                <button v-for="tab in [{id:'itinerary', n:'行程'}, {id:'split', n:'記帳'}, {id:'phrases', n:'日語'}]" 
+                        @click="activeTab = tab.id" 
+                        :class="['flex-1 py-2 rounded-xl text-sm font-black transition-all', activeTab === tab.id ? 'active-tab shadow-md' : 'text-slate-600']">
+                    {{ tab.n }}
+                </button>
             </div>
 
             <div v-if="activeTab === 'itinerary'" class="relative">
                 <div class="timeline-line"></div>
-                <div v-for="(item, index) in itinerary[currentDay]" :key="index" class="mb-6 relative pl-10">
+                <div v-for="(item, index) in itinerary[currentDay]" :key="index" class="mb-5 relative pl-9">
                     <div class="timeline-dot top-6"></div>
-                    <div class="glass-card p-5 rounded-3xl relative">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="flex flex-wrap gap-2">
-                                <input v-model="item.time" class="bg-teal-600 text-white text-[11px] px-3 py-1 rounded-full font-bold w-28 text-center shadow-sm">
-                                <div v-if="item.stay" class="flex items-center text-[10px] text-teal-800 font-bold bg-white/60 px-2 rounded-full border border-teal-200">
+                    <div class="glass-card p-4 rounded-2xl relative">
+                        <div class="flex justify-between items-start mb-2 gap-2">
+                            <div class="flex flex-wrap gap-1.5 flex-1">
+                                <input v-model="item.time" class="bg-teal-600 text-white text-[10px] px-2 py-0.5 rounded-lg font-bold w-24 text-center">
+                                <div class="flex items-center text-[10px] text-teal-800 font-bold bg-white/70 px-2 py-0.5 rounded-lg border border-teal-100">
                                     <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
-                                    停 <input v-model="item.stay" class="w-12 text-center font-black">
+                                    停 <input v-model="item.stay" class="w-10 text-center font-black" placeholder="-">
                                 </div>
                             </div>
                             <div class="flex gap-2">
-                                <button @click="openGoogleMap(item.location)" class="map-btn shadow-sm">
-                                    <i data-lucide="navigation" class="w-3 h-3"></i>GO
-                                </button>
-                                <button @click="deleteItem(index)" class="text-red-400 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                <button @click="openGoogleMap(item.location)" class="map-btn shadow-sm">GO</button>
+                                <button @click="deleteItem(index)" class="text-slate-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
                         
-                        <input v-model="item.location" class="text-lg font-black text-slate-900 mb-1 leading-tight" placeholder="行程名稱">
+                        <input v-model="item.location" class="text-lg font-black text-slate-900 mb-1 leading-tight" placeholder="景點名稱">
                         
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">🚗 MapCode</span>
-                            <input v-model="item.mapCode" class="text-xs font-bold text-orange-700" placeholder="MapCode">
+                        <div class="flex items-center gap-2 mb-2 bg-orange-50/50 p-1.5 rounded-lg border border-orange-100">
+                            <span class="text-[9px] bg-orange-200 text-orange-800 px-1.5 py-0.5 rounded font-black">🚗 MAPCODE</span>
+                            <input v-model="item.mapCode" class="text-xs font-bold text-orange-800" placeholder="點擊輸入 MapCode">
                         </div>
 
-                        <textarea v-model="item.note" class="text-xs text-slate-700 leading-relaxed h-auto min-h-[40px] mt-1" placeholder="備註..." rows="3"></textarea>
+                        <textarea v-model="item.note" class="text-xs text-slate-600 leading-relaxed min-h-[40px]" placeholder="備註..." rows="2"></textarea>
                         
-                        <div v-if="item.drive" class="mt-3 pt-2 border-t border-dashed border-teal-300 flex items-center text-[10px] text-teal-700 font-bold italic">
-                            <i data-lucide="car" class="w-3 h-3 mr-1"></i>
-                            車程：<input v-model="item.drive" class="w-24 font-black">
+                        <div class="mt-2 pt-2 border-t border-dashed border-teal-200 flex items-center text-[10px] text-teal-700 font-bold">
+                            <i data-lucide="car" class="w-3 h-3 mr-1.5"></i>
+                            下一站車程：<input v-model="item.drive" class="flex-1 font-black text-teal-900" placeholder="輸入時間 (如: 30分)">
                         </div>
                     </div>
                 </div>
-                <button @click="addItem" class="w-full py-4 border-2 border-dashed border-white/50 rounded-3xl text-white flex items-center justify-center bg-teal-800/30 mb-20 font-black shadow-lg">
-                    + 新增行程
+                <button @click="addItem" class="w-full py-4 border-2 border-dashed border-white/60 rounded-2xl text-white flex items-center justify-center bg-teal-800/20 mb-24 font-black">
+                    + 新增行程項目
                 </button>
             </div>
 
-            <div v-if="activeTab === 'phrases'" class="space-y-4 pb-20">
-                <div v-for="(p, idx) in phrases" :key="idx" class="glass-card p-6 rounded-3xl shadow-sm border-white/40">
-                    <p class="text-xs text-teal-700 font-bold mb-2">● {{ p.zh }}</p>
-                    <p class="text-3xl font-black text-slate-900 leading-snug break-words whitespace-pre-line">{{ p.jp }}</p>
+            <div v-if="activeTab === 'phrases'" class="space-y-4 pb-24">
+                <div v-for="(p, idx) in phrases" :key="idx" class="glass-card p-6 rounded-3xl shadow-sm border-white/40 text-center">
+                    <p class="text-xs text-teal-600 font-bold mb-2">● {{ p.zh }}</p>
+                    <p class="text-3xl font-black text-slate-900 leading-normal break-words whitespace-pre-line">{{ p.jp }}</p>
                 </div>
             </div>
 
-            <div v-if="activeTab === 'split'" class="space-y-4">
-                <div class="glass-card p-6 rounded-3xl bg-teal-800/80 text-white shadow-lg border-none text-center">
-                    <p class="text-teal-200 text-xs font-black mb-1">總計支出</p>
+            <div v-if="activeTab === 'split'" class="space-y-4 pb-24">
+                <div class="glass-card p-6 rounded-2xl bg-teal-800/80 text-white text-center">
+                    <p class="text-teal-200 text-[10px] font-black uppercase tracking-wider">Total Expenses</p>
                     <h3 class="text-3xl font-black">¥ {{ totalExpenses.toLocaleString() }}</h3>
                 </div>
-                <div v-for="(bill, idx) in expenses" :key="idx" class="glass-card p-4 rounded-2xl flex justify-between items-center">
-                    <input v-model="bill.title" class="font-bold">
+                <div v-for="(bill, idx) in expenses" :key="idx" class="glass-card p-4 rounded-xl flex justify-between items-center">
+                    <input v-model="bill.title" class="font-bold flex-1">
                     <div class="flex items-center">
-                        <span class="mr-1">¥</span><input v-model.number="bill.amount" type="number" class="w-20 text-right font-black">
-                        <button @click="expenses.splice(idx, 1)" class="ml-4 text-red-400"><i data-lucide="x-circle" class="w-5 h-5"></i></button>
+                        <span class="mr-1 text-teal-700 font-bold">¥</span>
+                        <input v-model.number="bill.amount" type="number" class="w-20 text-right font-black">
+                        <button @click="expenses.splice(idx, 1)" class="ml-3 text-red-300"><i data-lucide="x-circle" class="w-5 h-5"></i></button>
                     </div>
                 </div>
-                <button @click="addExpense" class="w-full py-4 glass-card rounded-2xl text-slate-600 font-bold">+ 新增支出</button>
+                <button @click="addExpense" class="w-full py-4 glass-card rounded-xl text-slate-600 font-bold text-sm">+ 新增支出</button>
             </div>
         </main>
 
-        <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[420px] h-16 glass-card rounded-full flex items-center justify-around px-6 shadow-2xl z-50 border-white/60 bg-white/80">
-            <button @click="activeTab = 'itinerary'" :class="activeTab === 'itinerary' ? 'text-teal-600 scale-125' : 'text-slate-500'"><i data-lucide="calendar"></i></button>
-            <button @click="activeTab = 'split'" :class="activeTab === 'split' ? 'text-teal-600 scale-125' : 'text-slate-500'"><i data-lucide="wallet"></i></button>
-            <button @click="activeTab = 'phrases'" :class="activeTab === 'phrases' ? 'text-teal-600 scale-125' : 'text-slate-500'"><i data-lucide="languages"></i></button>
+        <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[400px] h-16 glass-card rounded-full flex items-center justify-around px-4 shadow-2xl z-50 border-white/50 bg-white/80">
+            <button @click="activeTab = 'itinerary'" :class="activeTab === 'itinerary' ? 'text-teal-600 scale-110' : 'text-slate-400'"><i data-lucide="calendar"></i></button>
+            <button @click="activeTab = 'split'" :class="activeTab === 'split' ? 'text-teal-600 scale-110' : 'text-slate-400'"><i data-lucide="wallet"></i></button>
+            <button @click="activeTab = 'phrases'" :class="activeTab === 'phrases' ? 'text-teal-600 scale-110' : 'text-slate-400'"><i data-lucide="languages"></i></button>
         </nav>
     </div>
 
@@ -151,62 +143,55 @@
                 const currentDay = ref(1);
                 const activeTab = ref('itinerary');
                 const weather = ref({ temp: '--', pop: '--', code: 0 });
-                const exchangeRate = ref(0.215);
 
                 const dateInfo = [{date:'1/4', week:'日'},{date:'1/5', week:'一'},{date:'1/6', week:'二'},{date:'1/7', week:'三'},{date:'1/8', week:'四'}];
                 
-                // 完整行程預設值
                 const defaultItinerary = {
                     1: [
-                        { time: "06:00-07:00", location: "桃園機場第一航廈", stay: "1小時", drive: "2.5hr(航程)", note: "跟櫃姐說懷孕，可能可以優先登機", mapCode: "" },
+                        { time: "06:00-07:00", location: "桃園機場第一航廈", stay: "1hr", drive: "2.5hr(航程)", note: "跟櫃姐說懷孕，可能可以優先登機", mapCode: "" },
                         { time: "09:45-12:25", location: "那霸機場", note: "12:25 抵達", mapCode: "33 123 325*54" },
-                        { time: "14:00-14:30", location: "OTS 臨空豐崎營業所", note: "取車自駕開始", mapCode: "232 569 111*52" },
-                        { time: "15:00-16:00", location: "系滿魚市場", stay: "1 小時", drive: "1.5 小時", note: "16:30 後部分攤位收", mapCode: "232 484 077*14" },
+                        { time: "15:00-16:00", location: "系滿魚市場", stay: "1hr", drive: "1.5hr", note: "16:30 陸續收攤", mapCode: "232 484 077*14" },
                         { time: "17:30-", location: "LCH Resort (北部飯店)", note: "一樓有Lawson", mapCode: "206 411 325*73" }
                     ],
                     2: [
-                        { time: "09:00-09:30", location: "許田休息站", stay: "30 分", drive: "40 分", note: "買水族館門票(現金2000円)", mapCode: "206 476 705*46" },
-                        { time: "10:10-10:40", location: "古宇利南端展望台", stay: "30 分", drive: "30 分", note: "看海沙灘", mapCode: "485 601 892*07" },
-                        { time: "11:10-16:30", location: "沖繩美麗海水族館", stay: "5 小時", drive: "50 分", note: "排鯨鯊餐廳", mapCode: "553 075 592*40" },
-                        { time: "18:00-19:20", location: "燒肉本部牧場 名護店", stay: "1 小時 20", mapCode: "206 655 716*78" }
+                        { time: "09:00-09:30", location: "許田休息站", stay: "30m", drive: "40m", note: "買水族館門票", mapCode: "206 476 705*46" },
+                        { time: "11:10-16:30", location: "美麗海水族館", stay: "5hr", drive: "50m", note: "海豚秀、鯨鯊餐廳", mapCode: "553 075 592*40" },
+                        { time: "18:00-19:20", location: "燒肉本部牧場 名護店", stay: "1.5hr", mapCode: "206 655 716*78" }
                     ],
                     3: [
-                        { time: "09:10-11:30", location: "名護自然動植物園", stay: "2.5 小時", drive: "40 分", mapCode: "206 689 696*34" },
-                        { time: "12:10-13:00", location: "萬座毛", stay: "50 分", drive: "50 分", mapCode: "206 282 881*56" },
-                        { time: "13:50-18:00", location: "美國村", stay: "4 小時", drive: "40 分", mapCode: "33 525 442*36" }
+                        { time: "09:10-11:30", location: "名護自然動植物園", stay: "2.5hr", drive: "40m", mapCode: "206 689 696*34" },
+                        { time: "12:10-13:00", location: "萬座毛", stay: "50m", drive: "50m", mapCode: "206 282 881*56" },
+                        { time: "13:50-18:00", location: "美國村", stay: "4hr", drive: "40m", note: "日落美景", mapCode: "33 525 442*36" }
                     ],
                     4: [
-                        { time: "09:00-10:30", location: "泊港魚市場", stay: "1.5 小時", mapCode: "33 216 119*82" },
-                        { time: "10:30-12:00", location: "國際通＋牧志市場", stay: "1.5 小時", mapCode: "33 157 410*00" },
-                        { time: "14:00-15:00", location: "西松屋 豐崎店", stay: "1 小時", note: "iias購物中心裡", mapCode: "232 543 400*35" },
-                        { time: "16:40-19:00", location: "瀨長島", stay: "2.5 小時", mapCode: "33 002 486*08" }
+                        { time: "09:00-10:30", location: "泊港魚市場", stay: "1.5hr", mapCode: "33 216 119*82" },
+                        { time: "14:00-15:00", location: "西松屋 豐崎店", stay: "1hr", mapCode: "232 543 400*35" },
+                        { time: "16:40-19:00", location: "瀨長島", stay: "2.5hr", mapCode: "33 002 486*08" }
                     ],
                     5: [
-                        { time: "09:00-09:30", location: "達磨寺", stay: "30 分", mapCode: "33 161 568*51" },
+                        { time: "09:00-09:30", location: "達磨寺", stay: "30m", mapCode: "33 161 568*51" },
                         { time: "13:30-14:00", location: "還車", note: "前加滿油", mapCode: "232 569 111*52" },
                         { time: "16:55", location: "機場起飛", note: "Bye Bye Okinawa" }
                     ]
                 };
 
-                // 常用日文對話 (包含你新增的所有需求)
                 const defaultPhrases = [
                     { zh: "我有懷孕", jp: "妊娠しています。\n(Ninshin shite imasu)" },
-                    { zh: "我要辦理入住", jp: "チェックインをお願いします。\n(Chekku-in o onegaishimasu)" },
-                    { zh: "我要辦理退房", jp: "チェックアウトをお願いします。\n(Chekku-auto o onegaishimasu)" },
-                    { zh: "這個多少錢？", jp: "これはいくらですか？\n(Kore wa ikura desu ka?)" },
-                    { zh: "你有這個嗎？", jp: "これはありますか？\n(Kore wa arimasu ka?)" },
-                    { zh: "這是什麼？", jp: "これは何ですか？\n(Kore wa nan desu ka?)" },
-                    { zh: "我用現金支付", jp: "現金で払います。\n(Genkin de haraimasu)" },
-                    { zh: "我用信用卡支付", jp: "クレジットカードで払います。\n(Kurejitto ka-do de haraimasu)" },
-                    { zh: "請給我一杯水", jp: "お水を一杯ください。\n(Omizu o ippai kudasai)" },
-                    { zh: "請問有免費停車嗎？", jp: "無料駐車場はありますか？\n(Muryō chūshajō wa arimasu ka?)" },
-                    { zh: "不用袋子", jp: "袋はいりません。\n(Fukuro wa irimasen)" },
-                    { zh: "請不要加蔥", jp: "ねぎを入れないでください。\n(Negi o irenaide kudasai)" },
-                    { zh: "請問廁所在哪裡？", jp: "お手洗いはどこですか？\n(Otearai wa doko desu ka?)" }
+                    { zh: "我要辦理入住", jp: "チェックインをお願いします。" },
+                    { zh: "我要辦理退房", jp: "チェックアウトをお願いします。" },
+                    { zh: "這個多少錢？", jp: "これはいくらですか？" },
+                    { zh: "你有這個嗎？", jp: "これはありますか？" },
+                    { zh: "這是什麼？", jp: "これは何ですか？" },
+                    { zh: "我用現金支付", jp: "現金で払います。" },
+                    { zh: "我用信用卡支付", jp: "クレジットカードで払います。" },
+                    { zh: "請給我一杯水", jp: "お水を一杯ください。" },
+                    { zh: "請問有免費停車嗎？", jp: "無料駐車場はありますか？" },
+                    { zh: "請不要加蔥", jp: "ねぎを入れないでください。" },
+                    { zh: "請問廁所在哪裡？", jp: "お手洗いはどこですか？" }
                 ];
 
                 const itinerary = ref(JSON.parse(localStorage.getItem('ok_itinerary_2026')) || defaultItinerary);
-                const phrases = ref(defaultPhrases); // 每次更新時重新匯入最全的版本
+                const phrases = ref(defaultPhrases);
                 const expenses = ref(JSON.parse(localStorage.getItem('ok_expenses_2026')) || []);
 
                 const openGoogleMap = (loc) => {
@@ -214,9 +199,9 @@
                     window.open(url, '_blank');
                 };
 
-                const addItem = () => { itinerary.value[currentDay.value].push({ time: "12:00", location: "新點", stay: "", drive: "", note: "", mapCode: "" }); };
+                const addItem = () => { itinerary.value[currentDay.value].push({ time: "12:00", location: "新景點", stay: "", drive: "", note: "", mapCode: "" }); };
                 const deleteItem = (idx) => { if(confirm("確定刪除？")) itinerary.value[currentDay.value].splice(idx, 1); };
-                const addExpense = () => { expenses.value.push({ title: "新支出", amount: 0 }); };
+                const addExpense = () => { expenses.value.push({ title: "項目", amount: 0 }); };
 
                 watch([itinerary, expenses], () => {
                     localStorage.setItem('ok_itinerary_2026', JSON.stringify(itinerary.value));
@@ -236,7 +221,7 @@
                 });
 
                 watch([activeTab, currentDay], () => setTimeout(() => lucide.createIcons(), 50));
-                return { currentDay, activeTab, itinerary, weather, weatherIcon, dateInfo, expenses, totalExpenses, exchangeRate, phrases, addItem, deleteItem, addExpense, openGoogleMap };
+                return { currentDay, activeTab, itinerary, weather, weatherIcon, dateInfo, expenses, totalExpenses, phrases, addItem, deleteItem, addExpense, openGoogleMap };
             }
         }).mount('#app');
     </script>
